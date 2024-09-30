@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle de Acesso</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Painel de Controle de Acesso</h1>
+    </header>
+    
+    <main>
+        <!-- Formulário para adicionar novos usuários -->
+        <section>
+            <h2>Adicionar Novo Usuário</h2>
+            <form id="form-add">
+                <label for="nome">Nome do Usuário:</label>
+                <input type="text" id="nome" name="nome" required>
+
+                <label for="cartao">ID do Cartão RFID:</label>
+                <input type="text" id="cartao" name="cartao" required>
+
+                <button type="submit">Adicionar Usuário</button>
+            </form>
+        </section>
+
+        <!-- Formulário para remover usuários -->
+        <section>
+            <h2>Remover Usuário</h2>
+            <form id="form-remove">
+                <label for="cartao-remover">ID do Cartão RFID:</label>
+                <input type="text" id="cartao-remover" name="cartao-remover" required>
+
+                <button type="submit">Remover Usuário</button>
+            </form>
+        </section>
+
+        <!-- Tabela para exibir usuários existentes -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Cartão RFID</th>
+                    <th>Nome do Usuário</th>
+                    <th>Horário de Acesso</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Os dados serão inseridos aqui dinamicamente -->
+            </tbody>
+        </table>
+    </main>
+
+    <!-- JavaScript para adicionar e remover usuários -->
+    <script>
+        // Função para adicionar um novo usuário
+        document.getElementById('form-add').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evita recarregar a página
+            const nome = document.getElementById('nome').value;
+            const cartao = document.getElementById('cartao').value;
+
+            // Envia os dados para o backend (ajustar a URL para o backend real)
+            const resposta = await fetch('http://localhost:3000/adicionar-usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, cartao })
+            });
+
+            if (resposta.ok) {
+                alert('Usuário adicionado com sucesso!');
+                document.getElementById('form-add').reset(); // Limpa o formulário
+                carregarAcessos(); // Atualiza a lista de usuários
+            } else {
+                alert('Erro ao adicionar usuário!');
+            }
+        });
+
+        // Função para remover um usuário
+        document.getElementById('form-remove').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evita recarregar a página
+            const cartao = document.getElementById('cartao-remover').value;
+
+            // Envia os dados para o backend (ajustar a URL para o backend real)
+            const resposta = await fetch('http://localhost:3000/remover-usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cartao })
+            });
+
+            if (resposta.ok) {
+                alert('Usuário removido com sucesso!');
+                document.getElementById('form-remove').reset(); // Limpa o formulário
+                carregarAcessos(); // Atualiza a lista de usuários
+            } else {
+                alert('Erro ao remover usuário!');
+            }
+        });
+
+        // Função para carregar a tabela de acessos (a mesma que já tinha)
+        async function carregarAcessos() {
+            const resposta = await fetch('http://localhost:3000/acessos');
+            const acessos = await resposta.json();
+
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = ''; // Limpa o conteúdo antes de carregar os novos dados
+
+            acessos.forEach(acesso => {
+                const linha = document.createElement('tr');
+
+                const colunaCartao = document.createElement('td');
+                colunaCartao.textContent = acesso.cartao_rfid;
+
+                const colunaNome = document.createElement('td');
+                colunaNome.textContent = acesso.nome_usuario;
+
+                const colunaHorario = document.createElement('td');
+                colunaHorario.textContent = acesso.horario;
+
+                linha.appendChild(colunaCartao);
+                linha.appendChild(colunaNome);
+                linha.appendChild(colunaHorario);
+
+                tbody.appendChild(linha);
+            });
+        }
+
+        // Carrega os acessos ao iniciar a página
+        window.onload = carregarAcessos;
+    </script>
+</body>
+</html>
